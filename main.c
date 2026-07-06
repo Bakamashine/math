@@ -3,12 +3,19 @@
 #include <Windows.h>
 #include <float.h>
 #include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 
+// Буфер для хранения введённой пользователем функции
+char current_expr[100] = "";
+
+double eval(const char* expr, double x);
 double f(double);
 double derivative(double, double, double (*ptr)());
 void print_fraction(double);
 void interval();
 
+// Точка входа в программу
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
@@ -35,6 +42,7 @@ int main()
     return 0;
 }
 
+// Нахождение интервалов убывания функции
 void interval()
 {
     double a = -3.0, b = 4.0;
@@ -48,7 +56,7 @@ void interval()
     printf("В настоящее время поддерживается только буква \"X\"\n");
     printf("Введите вашу функцию: ");
     scanf("%s", _interval_string);
-
+    strcpy(current_expr, _interval_string);
 
     printf("Интервалы убывания функции y = %s:\n", _interval_string);
     int in_decreasing = 0;
@@ -81,9 +89,10 @@ void interval()
     }
 }
 
+// Пользовательская функция, введённая с клавиатуры
 double f(double x)
 {
-    return sqrt(12 + x - x * x);
+    return eval(current_expr, x);
 }
 
 // Вывод числа в виде дроби с корнем
@@ -150,4 +159,99 @@ void print_fraction(double value)
 double derivative(double x, double h, double (*ptr)())
 {
     return (ptr(x + h) - ptr(x - h)) / (2 * h);
+}
+
+double eval_expr(const char** p, double x);
+double eval_term(const char** p, double x);
+double eval_unary(const char** p, double x);
+double eval_primary(const char** p, double x);
+
+// Парсинг сложения и вычитания
+double eval_expr(const char** p, double x) {
+    double result = eval_term(p, x);
+    while (**p == '+' || **p == '-') {
+        char op = **p;
+        (*p)++;
+        double right = eval_term(p, x);
+        if (op == '+') result += right;
+        else result -= right;
+    }
+    return result;
+}
+
+// Парсинг умножения и деления
+double eval_term(const char** p, double x) {
+    double result = eval_unary(p, x);
+    while (**p == '*' || **p == '/') {
+        char op = **p;
+        (*p)++;
+        double right = eval_unary(p, x);
+        if (op == '*') result *= right;
+        else result /= right;
+    }
+    return result;
+}
+
+// Парсинг унарного плюса и минуса
+double eval_unary(const char** p, double x) {
+    if (**p == '-') {
+        (*p)++;
+        return -eval_unary(p, x);
+    }
+    if (**p == '+') {
+        (*p)++;
+        return eval_unary(p, x);
+    }
+    return eval_primary(p, x);
+}
+
+// Парсинг числа, переменной x, скобок и функций
+double eval_primary(const char** p, double x) {
+    while (isspace(**p)) (*p)++;
+
+    if (**p == '(') {
+        (*p)++;
+        double val = eval_expr(p, x);
+        while (isspace(**p)) (*p)++;
+        if (**p == ')') (*p)++;
+        return val;
+    }
+
+    if (**p == 'x') {
+        (*p)++;
+        return x;
+    }
+
+    if (isalpha(**p)) {
+        char func[16];
+        int i = 0;
+        while (isalpha(**p) && i < 15) func[i++] = *(*p)++;
+        func[i] = '\0';
+        while (isspace(**p)) (*p)++;
+        if (**p == '(') {
+            (*p)++;
+            double arg = eval_expr(p, x);
+            while (isspace(**p)) (*p)++;
+            if (**p == ')') (*p)++;
+            if (strcmp(func, "sqrt") == 0) return sqrt(arg);
+            if (strcmp(func, "sin") == 0) return sin(arg);
+            if (strcmp(func, "cos") == 0) return cos(arg);
+            if (strcmp(func, "tan") == 0) return tan(arg);
+            if (strcmp(func, "fabs") == 0) return fabs(arg);
+            return 0;
+        }
+        return 0;
+    }
+
+    char* end;
+    double val = strtod(*p, &end);
+    *p = end;
+    return val;
+}
+
+// Точка входа в парсер математических выражений
+double eval(const char* expr, double x) {
+    const char* p = expr;
+    double result = eval_expr(&p, x);
+    return result;
 }
