@@ -1,0 +1,10 @@
+build/
+.vscode/
+*.user
+*.suo
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
