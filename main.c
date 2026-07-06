@@ -6,14 +6,25 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#define ask(text)                 \
+    do                            \
+    {                             \
+        printf("%s\n", text);     \
+        answer = getchar();       \
+        while (getchar() != '\n') \
+            ;                     \
+    } while (0)
+
 // Буфер для хранения введённой пользователем функции
 char current_expr[100] = "";
+char answer;
 
-double eval(const char* expr, double x);
+double eval(const char *expr, double x);
 double f(double);
 double derivative(double, double, double (*ptr)());
 void print_fraction(double);
 void interval();
+void first_exercise();
 
 // Точка входа в программу
 int main()
@@ -21,8 +32,8 @@ int main()
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    char answer;
     printf("Добро пожаловать!\n");
+    printf("Если у вас плавающие числа, то вводите их через точку\n");
 
     printf("1) Нахождение косинуса или синуса \n");
     printf("2) Нахождение длины интервала на котором убывает функция \n");
@@ -31,7 +42,8 @@ int main()
     switch (answer)
     {
     case '1':
-        printf("Пока не поддерживается :(");
+        printf("Отсутствует");
+        // first_exercise();
         break;
     case '2':
         interval();
@@ -40,6 +52,74 @@ int main()
         break;
     }
     return 0;
+}
+
+void first_exercise()
+{
+    printf("Что у вас неизвестно?\n");
+    printf("1) cos\n");
+    printf("2) sin\n");
+    printf("3) tag\n");
+    printf("4) ctg\n");
+    printf("Ответ: ");
+    scanf(" %c", &answer);
+    switch (answer)
+    {
+
+        // Неизвестен косинус
+    case '1':
+
+        // double sin_alpha, tg_alpha, ctg_alpha;
+        double sin_alpha = 0;
+        double tg_alpha = 0;
+        double ctg_alpha = 0;
+
+        printf("1) sin\n");
+        printf("2) tag\n");
+        printf("3) ctg\n");
+        ask("Что у вас известно?");
+
+        switch (answer)
+        {
+
+            // sin
+        case '1':
+            printf("Сколько у вас sin?: ");
+            scanf("%lf", sin_alpha);
+            if (sin_alpha != 0) {
+                
+            }
+            break;
+
+            // tg
+        case '2':
+            printf("Сколько у вас tg?: ");
+            scanf("%lf", tg_alpha);
+            break;
+
+        case '3':
+            printf("Сколько у вас ctg?: ");
+            scanf("%lf", ctg_alpha);
+            break;
+
+        default:
+            break;
+        }
+        // printf("Скольким равен sin_alpha?: ");
+        // scanf("%lf", sin_alpha);
+
+        // if (sin_alpha == 0)
+        // {
+        //     printf("")
+        // }
+
+        break;
+    case '2':
+        break;
+
+    default:
+        break;
+    }
 }
 
 // Нахождение интервалов убывания функции
@@ -161,44 +241,55 @@ double derivative(double x, double h, double (*ptr)())
     return (ptr(x + h) - ptr(x - h)) / (2 * h);
 }
 
-double eval_expr(const char** p, double x);
-double eval_term(const char** p, double x);
-double eval_unary(const char** p, double x);
-double eval_primary(const char** p, double x);
+double eval_expr(const char **p, double x);
+double eval_term(const char **p, double x);
+double eval_unary(const char **p, double x);
+double eval_primary(const char **p, double x);
 
 // Парсинг сложения и вычитания
-double eval_expr(const char** p, double x) {
+double eval_expr(const char **p, double x)
+{
     double result = eval_term(p, x);
-    while (**p == '+' || **p == '-') {
+    while (**p == '+' || **p == '-')
+    {
         char op = **p;
         (*p)++;
         double right = eval_term(p, x);
-        if (op == '+') result += right;
-        else result -= right;
+        if (op == '+')
+            result += right;
+        else
+            result -= right;
     }
     return result;
 }
 
 // Парсинг умножения и деления
-double eval_term(const char** p, double x) {
+double eval_term(const char **p, double x)
+{
     double result = eval_unary(p, x);
-    while (**p == '*' || **p == '/') {
+    while (**p == '*' || **p == '/')
+    {
         char op = **p;
         (*p)++;
         double right = eval_unary(p, x);
-        if (op == '*') result *= right;
-        else result /= right;
+        if (op == '*')
+            result *= right;
+        else
+            result /= right;
     }
     return result;
 }
 
 // Парсинг унарного плюса и минуса
-double eval_unary(const char** p, double x) {
-    if (**p == '-') {
+double eval_unary(const char **p, double x)
+{
+    if (**p == '-')
+    {
         (*p)++;
         return -eval_unary(p, x);
     }
-    if (**p == '+') {
+    if (**p == '+')
+    {
         (*p)++;
         return eval_unary(p, x);
     }
@@ -206,52 +297,70 @@ double eval_unary(const char** p, double x) {
 }
 
 // Парсинг числа, переменной x, скобок и функций
-double eval_primary(const char** p, double x) {
-    while (isspace(**p)) (*p)++;
+double eval_primary(const char **p, double x)
+{
+    while (isspace(**p))
+        (*p)++;
 
-    if (**p == '(') {
+    if (**p == '(')
+    {
         (*p)++;
         double val = eval_expr(p, x);
-        while (isspace(**p)) (*p)++;
-        if (**p == ')') (*p)++;
+        while (isspace(**p))
+            (*p)++;
+        if (**p == ')')
+            (*p)++;
         return val;
     }
 
-    if (**p == 'x') {
+    if (**p == 'x')
+    {
         (*p)++;
         return x;
     }
 
-    if (isalpha(**p)) {
+    if (isalpha(**p))
+    {
         char func[16];
         int i = 0;
-        while (isalpha(**p) && i < 15) func[i++] = *(*p)++;
+        while (isalpha(**p) && i < 15)
+            func[i++] = *(*p)++;
         func[i] = '\0';
-        while (isspace(**p)) (*p)++;
-        if (**p == '(') {
+        while (isspace(**p))
+            (*p)++;
+        if (**p == '(')
+        {
             (*p)++;
             double arg = eval_expr(p, x);
-            while (isspace(**p)) (*p)++;
-            if (**p == ')') (*p)++;
-            if (strcmp(func, "sqrt") == 0) return sqrt(arg);
-            if (strcmp(func, "sin") == 0) return sin(arg);
-            if (strcmp(func, "cos") == 0) return cos(arg);
-            if (strcmp(func, "tan") == 0) return tan(arg);
-            if (strcmp(func, "fabs") == 0) return fabs(arg);
+            while (isspace(**p))
+                (*p)++;
+            if (**p == ')')
+                (*p)++;
+            if (strcmp(func, "sqrt") == 0)
+                return sqrt(arg);
+            if (strcmp(func, "sin") == 0)
+                return sin(arg);
+            if (strcmp(func, "cos") == 0)
+                return cos(arg);
+            if (strcmp(func, "tan") == 0)
+                return tan(arg);
+            if (strcmp(func, "fabs") == 0)
+                return fabs(arg);
             return 0;
         }
         return 0;
     }
 
-    char* end;
+    char *end;
     double val = strtod(*p, &end);
     *p = end;
     return val;
 }
 
 // Точка входа в парсер математических выражений
-double eval(const char* expr, double x) {
-    const char* p = expr;
+double eval(const char *expr, double x)
+{
+    const char *p = expr;
     double result = eval_expr(&p, x);
     return result;
 }
